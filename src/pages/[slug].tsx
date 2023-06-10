@@ -1,29 +1,72 @@
-import { type NextPage } from "next";
+import type { GetStaticProps, NextPage } from "next";
+import Image from "next/image";
 import Head from "next/head";
+import { LoadingSpinner } from "~/components/loading";
 import { api } from "~/utils/api";
+import { prisma } from "~/server/db";
+import SuperJSON from "superjson";
+import { appRouter } from "~/server/api/root";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { PageLayout } from "~/components/layout";
 
-const ProfilePage: NextPage = () => {
-  api.posts.getAll.useQuery();
+const ProfilePage: NextPage<{ username: string }> = ({ username }) => {
+  const { data, isLoading } = api.profile.getUserByUsername.useQuery({
+    username,
+  });
 
-  // Return empty div if both aren't loaded since user loads faster
+  if (isLoading) return <LoadingSpinner />;
+  if (!data) return <div>404</div>;
 
   return (
     <>
       <Head>
-        <title>Safer Pilot</title>
-        <meta
-          name="description"
-          content="Become A Safer Pilot Through Proficiency"
-        />
-        <link rel="icon" href="/favicon.ico" />
+        <title>`@{data.username}`</title>
       </Head>
-      <main className="flex h-screen justify-center">
-        <div className="h-full w-full border-x border-slate-400 md:max-w-2xl">
-          <div>Profile View</div>
+      <PageLayout>
+        <div className="relative h-48 border-slate-400 bg-slate-600">
+          <Image
+            src={data.profileImageUrl}
+            alt={`${data.username ?? ""}'s profile picture`}
+            width={128}
+            height={128}
+            className="absolute bottom-0 left-0 -mb-[64px] ml-4 rounded-full border-4 border-black bg-black"
+          />
         </div>
-      </main>
+        <div className="h-[64px]"></div>
+        <div className="p-4 text-2xl font-bold">{`@${
+          data.username ?? ""
+        }`}</div>
+        <div className="w-full border-b border-slate-400"></div>
+      </PageLayout>
     </>
   );
+};
+
+export const getStaticProps: GetStaticProps = async (context) => {
+  const ssg = createServerSideHelpers({
+    router: appRouter,
+    ctx: { prisma, userId: null },
+    transformer: SuperJSON,
+  });
+
+  const slug = context.params?.slug;
+
+  if (typeof slug !== "string") throw new Error("no slug");
+
+  const username = slug.replace("@", "");
+
+  await ssg.profile.getUserByUsername.prefetch({ username });
+
+  return {
+    props: {
+      trpcState: ssg.dehydrate(),
+      username,
+    },
+  };
+};
+
+export const getStaticPaths = () => {
+  return { paths: [], fallback: "blocking" };
 };
 
 export default ProfilePage;

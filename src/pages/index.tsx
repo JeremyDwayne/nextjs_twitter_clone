@@ -1,15 +1,15 @@
 import { type NextPage } from "next";
-import Head from "next/head";
 import { api } from "~/utils/api";
 import type { RouterOutputs } from "~/utils/api";
 import { SignInButton, useUser } from "@clerk/nextjs";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import Image from "next/image"
+import Image from "next/image";
 import { LoadingPage, LoadingSpinner } from "~/components/loading";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
+import { PageLayout } from "~/components/layout";
 
 dayjs.extend(relativeTime);
 
@@ -27,10 +27,10 @@ const CreatePostWizard = () => {
       const errorMessage = e.data?.zodError?.fieldErrors.content;
       if (errorMessage && errorMessage[0]) {
         toast.error(errorMessage[0]);
-      }else {
+      } else {
         toast.error("Failed to post! Please try again later.");
       }
-    }
+    },
   });
   if (!user) return null;
 
@@ -50,7 +50,7 @@ const CreatePostWizard = () => {
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter"){
+          if (e.key === "Enter") {
             e.preventDefault();
             if (input !== "") {
               mutate({ content: input });
@@ -66,7 +66,7 @@ const CreatePostWizard = () => {
       )}
       {isPosting && (
         <div className="flex flex-col justify-center">
-          <LoadingSpinner size={20}/>
+          <LoadingSpinner size={20} />
         </div>
       )}
     </div>
@@ -76,7 +76,7 @@ const CreatePostWizard = () => {
 type PostWithUser = RouterOutputs["posts"]["getAll"][number];
 
 const PostView = (props: PostWithUser) => {
-  const {post, author} = props;
+  const { post, author } = props;
   return (
     <div key={post.id} className="flex gap-3 border-b border-slate-400 p-4">
       <Image
@@ -101,7 +101,6 @@ const PostView = (props: PostWithUser) => {
       </div>
     </div>
   );
-
 };
 
 const Feed = () => {
@@ -119,36 +118,27 @@ const Feed = () => {
 };
 
 const Home: NextPage = () => {
-  const { isLoaded: userLoaded, isSignedIn} = useUser();
+  const { isLoaded: userLoaded, isSignedIn } = useUser();
 
   api.posts.getAll.useQuery();
 
   // Return empty div if both aren't loaded since user loads faster
-  if (!userLoaded) return <div />
+  if (!userLoaded) return <div />;
 
   return (
     <>
-      <Head>
-        <title>Safer Pilot</title>
-        <meta
-          name="description"
-          content="Become A Safer Pilot Through Proficiency"
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <main className="flex h-screen justify-center">
-        <div className="h-full w-full border-x border-slate-400 md:max-w-2xl">
-          <div className="flex border-b border-slate-400 p-4">
-            {!isSignedIn && (
-              <div className="flex justify-center">
-                <SignInButton />
-              </div>
-            )}
-            {isSignedIn && <CreatePostWizard />}
-          </div>
-          <Feed />
+      <PageLayout>
+        <div className="flex border-b border-slate-400 p-4">
+          {!isSignedIn && (
+            <div className="flex justify-center">
+              <SignInButton />
+            </div>
+          )}
+          {isSignedIn && <CreatePostWizard />}
         </div>
-      </main>
+
+        <Feed />
+      </PageLayout>
     </>
   );
 };

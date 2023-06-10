@@ -1,5 +1,6 @@
 import { type NextPage } from "next";
 import Head from "next/head";
+import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
 
 const SinglePostPage: NextPage = () => {
@@ -10,18 +11,11 @@ const SinglePostPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Safer Pilot</title>
-        <meta
-          name="description"
-          content="Become A Safer Pilot Through Proficiency"
-        />
-        <link rel="icon" href="/favicon.ico" />
+        <title>Post</title>
       </Head>
-      <main className="flex h-screen justify-center">
-        <div className="h-full w-full border-x border-slate-400 md:max-w-2xl">
-          <div>Single Post View</div>
-        </div>
-      </main>
+      <PageLayout>
+        <div>Single Post View</div>
+      </PageLayout>
     </>
   );
 };
